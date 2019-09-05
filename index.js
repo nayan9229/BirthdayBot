@@ -15,12 +15,13 @@ app.get('/', function (req, res) {
 });
 app.get('/webhook/', function (req, res) {
 	if (req.query['hub.verify_token'] === CONFIG.VERIFICATION_TOKEN) {
+        console.log('GET', req.query['hub.challenge']);
 		res.send(req.query['hub.challenge']);
-	}
-	res.send('Wrong token!');
+	}else res.send('Wrong token!');
 });
 
 app.post('/webhook/', function (req, res) {
+    console.log('POST');
     // const data = req.body
     // const message = data.entry[0].messaging[0].message.text
     // const sender = data.entry[0].messaging[0].sender.id
@@ -34,6 +35,9 @@ app.post('/webhook/', function (req, res) {
     for (var i = 0; i < messaging_events.length; i++) {
         var event = req.body.entry[0].messaging[i];
         var sender = event.sender.id;
+        console.log('POST',event.message);
+        console.log('POST',event.text);
+        
         if (event.message && event.message.text) {
             var text = event.message.text;
             sendTextMessage(sender, text + "!");
