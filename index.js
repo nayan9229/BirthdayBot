@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 // Home
 app.get('/', function (req, res) {
-    res.send('Hello world!');
+    res.send('Welcome to birthday BOT');
 });
 
 /*
@@ -80,8 +80,7 @@ app.get('/messages', function (req, res) {
 });
 
 /*
- * Use your own validation token. Check that the token used in the Webhook
- * setup is the same token used here.
+ * Retrives the list of messages received from users.
  *
  */
 app.get('/messages/:messageId', function (req, res) {
@@ -95,8 +94,7 @@ app.get('/messages/:messageId', function (req, res) {
 });
 
 /*
- * Use your own validation token. Check that the token used in the Webhook
- * setup is the same token used here.
+ * delete the messages by messageId.
  *
  */
 app.delete('/messages/:messageId', function (req, res) {

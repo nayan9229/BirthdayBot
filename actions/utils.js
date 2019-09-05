@@ -75,7 +75,6 @@ function getById(msgId) {
         client.connect(err => {
             if (err) console.log(err);
             var query = { _id: new mongo.ObjectID(msgId) };
-            console.log(query);
             client.db("bot").collection("message").find(query).toArray(function (err, result) {
                 if (err) reject(err);
                 else resolve(result);
@@ -91,7 +90,6 @@ function deleteById(msgId) {
         client.connect(err => {
             if (err) console.log(err);
             var query = { _id: new mongo.ObjectID(msgId) };
-            console.log(query);
             client.db("bot").collection("message").deleteOne(query, function (err, result) {
                 if (err) reject(err);
                 else resolve(result);
