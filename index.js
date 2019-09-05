@@ -31,7 +31,8 @@ app.post('/webhook/', function (req, res) {
     //         sendmsg(sender, value)
     //     }
     // });
-    var messaging_events = req.body.entry[0].messaging;
+    try {
+        var messaging_events = req.body.entry[0].messaging;
     for (var i = 0; i < messaging_events.length; i++) {
         var event = req.body.entry[0].messaging[i];
         var sender = event.sender.id;
@@ -44,6 +45,10 @@ app.post('/webhook/', function (req, res) {
         }
     }
     res.sendStatus(200)
+    } catch (error) {
+        console.log('[CATCH]', error);
+        res.sendStatus(200)
+    }
 });
 
 function sendTextMessage(sender, text) {
