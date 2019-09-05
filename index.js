@@ -3,8 +3,10 @@ const bodyParser = require('body-parser');
 const request = require('request');
 const app = express();
 const CONFIG = require('./config');
+const { receivedMessage } = require('./actions/receivedHandler');
+const { getAllMessages, getById, deleteById } = require('./actions/utils');
 
-app.set('port', (process.env.PORT || 80));
+app.set('port', (process.env.PORT || 8080));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -43,43 +45,19 @@ app.post('/webhook', function (req, res) {
     if (data.object == 'page') {
         // Iterate over each entry
         // There may be multiple if batched
-        // data.entry.forEach(function (pageEntry) {
-        //     var pageID = pageEntry.id;
-        //     var timeOfEvent = pageEntry.time;
+        data.entry.forEach(function (pageEntry) {
+            var pageID = pageEntry.id;
+            var timeOfEvent = pageEntry.time;
 
-        //     // Iterate over each messaging event
-        //     pageEntry.messaging.forEach(function (messagingEvent) {
-        //         // if (messagingEvent.optin) {
-        //         //     receivedAuthentication(messagingEvent);
-        //         // } else if (messagingEvent.message) {
-        //         //     receivedMessage(messagingEvent);
-        //         // } else if (messagingEvent.delivery) {
-        //         //     receivedDeliveryConfirmation(messagingEvent);
-        //         // } else if (messagingEvent.postback) {
-        //         //     receivedPostback(messagingEvent);
-        //         // } else if (messagingEvent.read) {
-        //         //     receivedMessageRead(messagingEvent);
-        //         // } else if (messagingEvent.account_linking) {
-        //         //     receivedAccountLink(messagingEvent);
-        //         // } else {
-        //         //     console.log("Webhook received unknown messagingEvent: ", messagingEvent);
-        //         // }
-        //     });
-        // });
-        try {
-            var messaging_events = req.body.entry[0].messaging;
-            for (var i = 0; i < messaging_events.length; i++) {
-                var event = req.body.entry[0].messaging[i];
-                var sender = event.sender.id;
-                if (event.message && event.message.text) {
-                    var text = event.message.text;
-                    sendTextMessage(sender, text + "!");
+            // Iterate over each messaging event
+            pageEntry.messaging.forEach(function (messagingEvent) {
+                if (messagingEvent.message) {
+                    receivedMessage(messagingEvent);
+                } else {
+                    console.log("Webhook received unknown messagingEvent: ", messagingEvent);
                 }
-            }
-            res.sendStatus(200);
-        } catch (error) {
-            console.log('[CATCH]', error);
-        }
+            });
+        });
 
         // Assume all went well.
         //
@@ -89,30 +67,45 @@ app.post('/webhook', function (req, res) {
     }
 });
 
-function sendTextMessage(sender, text) {
-    var messageData = {
-        text: text
-    };
-    request({
-        url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: {
-            access_token: CONFIG.FB_TOKEN
-        },
-        method: 'POST',
-        json: {
-            recipient: {
-                id: sender
-            },
-            message: messageData,
-        }
-    }, function (error, response, body) {
-        if (error) {
-            console.log('Error:', error);
-        } else if (response.body.error) {
-            console.log('Error: ', response.body.error);
-        }
-    });
-}
+
+/*
+ * Use your own validation token. Check that the token used in the Webhook
+ * setup is the same token used here.
+ *
+ */
+app.get('/messages', function (req, res) {
+    getAllMessages()
+        .then(result => res.status(200).send(result))
+        .catch(err => res.status(403).send({ message: 'Something Went wrong' }));
+});
+
+/*
+ * Use your own validation token. Check that the token used in the Webhook
+ * setup is the same token used here.
+ *
+ */
+app.get('/messages/:messageId', function (req, res) {
+    getById(req.params.messageId)
+        .then(result => {
+            if (result.length > 0) {
+                res.status(200).send(result[0]);
+            } else res.status(200).send({ message: 'Not Found.' })
+        })
+        .catch(err => res.status(403).send({ message: 'Something Went wrong' }));
+});
+
+/*
+ * Use your own validation token. Check that the token used in the Webhook
+ * setup is the same token used here.
+ *
+ */
+app.delete('/messages/:messageId', function (req, res) {
+    deleteById(req.params.messageId)
+        .then(result => {
+            res.status(200).send({ message: 'message deleted successfully' });
+        })
+        .catch(err => res.status(403).send({ message: 'Something Went wrong' }));
+});
 
 // Start the server
 app.listen(app.get('port'), function () {
